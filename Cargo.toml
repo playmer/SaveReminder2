@@ -1,0 +1,11 @@
+[package]
+name = "SaveReminder"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+druid = { git = "https://github.com/linebender/druid" }
+druid-shell = { git = "https://github.com/linebender/druid" }
+log = "0.4.11"

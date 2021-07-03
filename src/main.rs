@@ -53,7 +53,7 @@ impl Widget<u32> for TimerWidget {
 
 use std::time::Duration;
 
-use druid::widget::{Button, Checkbox, Flex, Label, LensWrap, Parse, TextBox};
+use druid::widget::{Button, Checkbox, DisabledIf, Flex, Label, LensWrap, Parse, TextBox};
 use druid::{
     AppLauncher, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, Lens, LocalizedString, TimerToken, UnitPoint, Widget,
     WidgetExt, WindowDesc, WindowConfig
@@ -68,7 +68,8 @@ const WINDOW_TITLE: LocalizedString<SaveReminderState> = LocalizedString::new("H
 #[derive(Clone, Data, Lens)]
 struct SaveReminderState {
     minutes_to_wait: String,
-    repeat: bool
+    repeat: bool,
+    timer_started : bool
 }
 
 pub fn main() {
@@ -80,7 +81,8 @@ pub fn main() {
     // create the initial app state
     let initial_state = SaveReminderState {
         minutes_to_wait: "5".into(),
-        repeat: true
+        repeat: true,
+        timer_started: false
     };
 
     // start the application
@@ -126,11 +128,12 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
 
     let mut button_row = Flex::row();
 
-    button_row.add_child(Button::new("Start").on_click(|context, data: &mut SaveReminderState, env| {
+    let start_button = Button::new("Start").on_click(|context, data: &mut SaveReminderState, env| {
         match data.minutes_to_wait.parse::<u64>() {
             Ok(minutes_to_wait_num) => {
                 println!("{}", minutes_to_wait_num);
-                let mut timer = context.request_timer(Duration::from_secs(minutes_to_wait_num * 60));
+                //let mut timer = context.request_timer(Duration::from_secs(minutes_to_wait_num * 60));
+                data.timer_started = true;
             }
             Err(_e) => {
                 data.minutes_to_wait = String::from("5");
@@ -147,9 +150,23 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
                 );
             },
         }
-    }));
+    });
 
-    button_row.add_child(Button::new("Stop"));
+    let potentially_disabled_start_button = DisabledIf::new(start_button, |data, env| {
+        data.timer_started
+    });
+
+    button_row.add_child(potentially_disabled_start_button);
+
+    let stop_button = Button::new("Stop").on_click(|context, data: &mut SaveReminderState, env|{
+        data.timer_started = false;
+    });
+
+    let potentially_disabled_stop_button = DisabledIf::new(stop_button, |data, env| {
+        !data.timer_started
+    });
+
+    button_row.add_child(potentially_disabled_stop_button);
 
     // arrange the two widgets vertically, with some padding
     Flex::column()

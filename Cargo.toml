@@ -1,5 +1,5 @@
 [package]
-name = "SaveReminder"
+name = "save_reminder"
 version = "0.1.0"
 edition = "2018"
 
@@ -10,4 +10,4 @@ edition = "2018"
 [dependencies]
 druid = { git = "https://github.com/linebender/druid" }
 druid-shell = { git = "https://github.com/linebender/druid" }
-log = "0.4.11"
+soloud = "0.4.0"

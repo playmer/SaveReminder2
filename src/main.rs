@@ -1,4 +1,4 @@
-// Copyright 2019 The Druid Authors.
+// Copyright 2019 Joshua T. Fisher.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ use soloud::*;
 
 use druid::widget::prelude::*;
 use druid::widget::{Button, Checkbox, DisabledIf, Flex, Label, LensWrap, Parse, TextBox};
-use druid::{AppLauncher, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, Lens, LensExt, LocalizedString, TimerToken, UnitPoint, Widget, WidgetExt, WindowDesc};
+use druid::{AppLauncher, Data, Env, EventCtx, FontDescriptor, FontFamily, Lens, LensExt, LocalizedString, TimerToken, UnitPoint, Widget, WidgetExt, WindowDesc};
 
-//use druid_shell::{WindowState};
+use crate::widgets::{TimerWidget};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 
@@ -37,108 +37,11 @@ struct SaveReminderState {
 }
 
 
-struct TimerWidget<T>
-{
-    timer_token : Option<TimerToken>,
-    timer_start_stop: Box<dyn Fn(&mut UpdateCtx, &T, &T, &Env) -> Option<Option<TimerToken>>>,
-    end_timer: Box<dyn Fn(&mut EventCtx, &mut T, &Env)>,
-}
 
-
-impl<T: Data> TimerWidget<T> {
-    pub fn new(timer_start_stop: impl Fn(&mut UpdateCtx, &T, &T, &Env) -> Option<Option<TimerToken>> + 'static,
-               end_timer: impl Fn(&mut EventCtx, &mut T, &Env) + 'static) -> Self {
-        TimerWidget {
-            timer_token : None,
-            timer_start_stop : Box::new(timer_start_stop),
-            end_timer : Box::new(end_timer),
-        }
-    }
-}
-
-impl<T: Data> Widget<T> for TimerWidget<T> {
-    fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
-        match event {
-            Event::Timer(id) => {
-                if self.timer_token.is_some() && *id == self.timer_token.unwrap() {
-                    (self.end_timer)(ctx, data, env);
-                }
-                else {
-                    println!("missed timer");
-                }
-
-                self.timer_token = None;
-            }
-            _ => (),
-        }
-    }
-
-
-    fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &T, _env: &Env) {
-    }
-
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &T, data: &T, env: &Env) {
-
-        match (self.timer_start_stop)(ctx, old_data, data, env) {
-            Some(value) => {
-                self.timer_token = value;
-                
-            },
-            _ => (),
-        }
-    }
-
-    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, _env: &Env) -> Size {
-        bc.constrain((0.0, 0.0))
-    }
-
-    fn paint(&mut self, _ctx: &mut PaintCtx, _data: &T, _env: &Env) {
-    }
-}
-
-
-
-struct SoundWidget<T>
-{
-    update_event : Box<dyn Fn(&mut UpdateCtx, &T, &T, &mut Soloud, &mut audio::Wav, &Env)>,
+struct TimerUserData{
     soloud : Soloud,
     alarm : audio::Wav
 }
-
-impl<T: Data> SoundWidget<T> {
-    pub fn new(update_event: impl Fn(&mut UpdateCtx, &T, &T, &mut Soloud, &mut audio::Wav, &Env) + 'static) -> Self {
-        let mut widget = SoundWidget {
-            update_event : Box::new(update_event),
-            soloud : Soloud::default().unwrap(),
-            alarm : audio::Wav::default()
-        };
-
-        widget.alarm.load("alarm.wav").unwrap();
-
-        return widget;
-    }
-}
-
-impl<T: Data> Widget<T> for SoundWidget<T> {
-    fn event(&mut self, _ctx: &mut EventCtx, _event: &Event, _data: &mut T, _env: &Env) {
-    }
-
-
-    fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &T, _env: &Env) {
-    }
-
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &T, data: &T, env: &Env) {
-        (self.update_event)(ctx, old_data, data, &mut self.soloud, &mut self.alarm, env)
-    }
-
-    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, _env: &Env) -> Size {
-        bc.constrain((0.0, 0.0))
-    }
-
-    fn paint(&mut self, _ctx: &mut PaintCtx, _data: &T, _env: &Env) {
-    }
-}
-
 
 pub fn main() {
     // describe the main window
@@ -192,7 +95,6 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
     repeat_row.add_child(Label::new("Should Repeat Reminder:"));
     repeat_row.add_child(LensWrap::new(Checkbox::new(""), SaveReminderState::repeat));
 
-    
     //////////////////////////
     // Buttons
     //////////////////////////
@@ -221,20 +123,33 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
     //////////////////////////
     // Timer
     //////////////////////////
-    let timer = TimerWidget::new(|ctx : &mut UpdateCtx, old_data : &SaveReminderState, data : &SaveReminderState, _env : &Env| {
+
+    let mut user_data = TimerUserData {
+        soloud : Soloud::default().unwrap(),
+        alarm : audio::Wav::default()
+    };
+
+    user_data.alarm.load("alarm.wav").unwrap();
+
+    let timer = TimerWidget::new(user_data, |ctx : &mut UpdateCtx, user_data : &mut TimerUserData, timer_token : &mut Option<TimerToken>, old_data : &SaveReminderState, data : &SaveReminderState, _env : &Env| {
         // Need to make a new timer, since the user hit start.
         if !old_data.timer_started && data.timer_started {
-            return Some(Some(ctx.request_timer(Duration::from_secs(data.minutes_to_wait))));
+            *timer_token = Some(ctx.request_timer(Duration::from_secs(60 * data.minutes_to_wait)));
         }
 
         // Need to wipe out the timer, since the user hit stop.
         if old_data.timer_started && !data.timer_started {
-            return Some(None);
+            *timer_token = None;
         }
 
-        return None;
-    }, |_context : &mut EventCtx, data : &mut SaveReminderState, _env : &Env| {
+        // Need to stop sound, user just acked the timer.
+        if old_data.main_window_disabled && !data.main_window_disabled {
+            user_data.soloud.stop_all();
+        }
+    }, |_context : &mut EventCtx, user_data : &mut TimerUserData, data : &mut SaveReminderState, _env : &Env| {
         data.main_window_disabled = true;
+        
+        user_data.soloud.set_looping(user_data.soloud.play(&user_data.alarm), true);
 
         // Make a modal Window?
         //ctx.new_sub_window(
@@ -258,23 +173,6 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
     });
 
     button_row.add_child(timer);
-    
-    //////////////////////////
-    // Sound
-    //////////////////////////
-    let sound = SoundWidget::new(|_context : &mut UpdateCtx, old_data : &SaveReminderState, data : &SaveReminderState, soloud : &mut Soloud, wav : &mut audio::Wav, _env : &Env| {
-        // Need to make sound, user hasn't acked the timer yet.
-        if !old_data.main_window_disabled && data.main_window_disabled {
-            soloud.set_looping(soloud.play(wav), true);
-        }
-
-        // Need to stop sound, user just acked the timer.
-        if old_data.main_window_disabled && !data.main_window_disabled {
-            soloud.stop_all();
-        }
-    });
-
-    button_row.add_child(sound);
 
     //////////////////////////
     // Vertical Layout

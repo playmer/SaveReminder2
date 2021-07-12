@@ -14,6 +14,8 @@
 
 #![windows_subsystem = "windows"]
 
+mod widgets;
+
 use std::time::Duration;
 
 use soloud::*;
@@ -22,7 +24,7 @@ use druid::widget::prelude::*;
 use druid::widget::{Button, Checkbox, DisabledIf, Flex, Label, LensWrap, Parse, TextBox};
 use druid::{AppLauncher, Data, Env, EventCtx, FontDescriptor, FontFamily, Lens, LensExt, LocalizedString, TimerToken, UnitPoint, Widget, WidgetExt, WindowDesc};
 
-use crate::widgets::{TimerWidget};
+use crate::widgets::widget::*;
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 
@@ -35,8 +37,6 @@ struct SaveReminderState {
     timer_started : bool,
     main_window_disabled : bool
 }
-
-
 
 struct TimerUserData{
     soloud : Soloud,

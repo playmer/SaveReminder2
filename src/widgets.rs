@@ -31,7 +31,7 @@ pub mod widget {
                 match ctx.window().raw_window_handle() {
                     RawWindowHandle::Windows(handle) => {
                         unsafe {
-                            let image = LoadIconA(GetModuleHandleA(PSTR::NULL), PSTR(1 as * mut u8));
+                            let image = LoadIconA(GetModuleHandleA(PSTR::NULL), PSTR("icon_1\0".as_ptr() as _));
                             
                             SetClassLongPtrA(
                                 HWND(handle.hwnd as isize), 

@@ -8,9 +8,14 @@ edition = "2018"
 #![windows_subsystem = "windows"]
 
 [dependencies]
-druid = { git = "https://github.com/linebender/druid" }
-druid-shell = { git = "https://github.com/linebender/druid" }
+druid = { git = "https://github.com/playmer/druid", branch = "raw-win-handle", features = ["raw-win-handle"] }
+druid-shell = { git = "https://github.com/playmer/druid", branch = "raw-win-handle", features = ["raw-win-handle"] }
+raw-window-handle = { version = "0.3.3", optional = true, default_features = false }
 soloud = "0.4.0"
+windows = "0.17.2"
+
+[build-dependencies]
+windows = "0.17.2"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"

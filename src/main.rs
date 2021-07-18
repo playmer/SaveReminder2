@@ -98,32 +98,31 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
     //////////////////////////
     // Buttons
     //////////////////////////
+    //////////////////////////
+    // Start Button
     let mut button_row = Flex::row();
 
     let start_button = Button::new("Start").on_click(|_context, data: &mut SaveReminderState, _env| {
         data.timer_started = true;
     });
 
-    let start_button = DisabledIf::new(start_button, |data, _env| {
+    button_row.add_child(DisabledIf::new(start_button, |data, _env| {
         data.timer_started
-    });
+    }));
 
-    button_row.add_child(start_button);
-
+    //////////////////////////
+    // Stop Button
     let stop_button = Button::new("Stop").on_click(|_context, data: &mut SaveReminderState, _env|{
         data.timer_started = false;
     });
 
-    let stop_button = DisabledIf::new(stop_button, |data, _env| {
+    button_row.add_child(DisabledIf::new(stop_button, |data, _env| {
         !data.timer_started
-    });
-
-    button_row.add_child(stop_button);
+    }));
 
     //////////////////////////
     // Timer
     //////////////////////////
-
     let mut user_data = TimerUserData {
         soloud : Soloud::default().unwrap(),
         alarm : audio::Wav::default()
@@ -131,10 +130,11 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
 
     user_data.alarm.load("alarm.wav").unwrap();
 
-    let timer = TimerWidget::new(user_data, |ctx : &mut UpdateCtx, user_data : &mut TimerUserData, timer_token : &mut Option<TimerToken>, old_data : &SaveReminderState, data : &SaveReminderState, _env : &Env| {
+    let timer = TimerWidget::new(user_data, 
+        |context : &mut UpdateCtx, user_data : &mut TimerUserData, timer_token : &mut Option<TimerToken>, old_data : &SaveReminderState, data : &SaveReminderState, _env : &Env| {
         // Need to make a new timer, since the user hit start.
         if !old_data.timer_started && data.timer_started {
-            *timer_token = Some(ctx.request_timer(Duration::from_secs(60 * data.minutes_to_wait)));
+            *timer_token = Some(context.request_timer(Duration::from_secs(60 * data.minutes_to_wait)));
         }
 
         // Need to wipe out the timer, since the user hit stop.
@@ -177,6 +177,9 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
     //////////////////////////
     // Vertical Layout
     //////////////////////////
+    
+    //////////////////////////
+    // Main Column,  gets disabled if the timer is currently going off.
     let main_column = Flex::column()
         .with_child(label)
         .with_spacer(VERTICAL_WIDGET_SPACING)
@@ -185,12 +188,15 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
         .with_child(repeat_row)
         .with_spacer(VERTICAL_WIDGET_SPACING)
         .with_child(button_row)
+        .with_child(WindowIconWidget::new())
         .align_vertical(UnitPoint::CENTER);
 
     let main_column = DisabledIf::new(main_column , |data, _env| {
             data.main_window_disabled
     });
     
+    //////////////////////////
+    // Acknowledge Timer Button
     let ack_button = Button::new("Acknowledge Timer").on_click(|_context, data: &mut SaveReminderState, _env|{
         data.main_window_disabled = false;
 
@@ -203,6 +209,8 @@ fn build_root_widget() -> impl Widget<SaveReminderState> {
         !data.main_window_disabled
     });
 
+    //////////////////////////
+    // Full layout for the window.
     Flex::column()
         .with_child(main_column)
         .with_spacer(VERTICAL_WIDGET_SPACING)

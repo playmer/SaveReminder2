@@ -1,7 +1,73 @@
 
 pub mod widget {
     use druid::widget::prelude::*;
-    use druid::{Data, Env, Event, EventCtx, TimerToken, Widget};
+    use druid::{Data, Env, Event, EventCtx, HasRawWindowHandle, TimerToken, Widget};
+    use druid_shell::raw_window_handle::RawWindowHandle;
+
+    mod bindings {
+        windows::include_bindings!();
+    }
+
+    use bindings::{
+        Windows::Win32::UI::WindowsAndMessaging::*,
+        Windows::Win32::Foundation::{HWND, HINSTANCE, PSTR},
+        Windows::Win32::System::LibraryLoader::*,
+        Windows::Win32::UI::Controls::*
+    };
+
+    //use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+    pub struct WindowIconWidget
+    {
+    }
+
+    impl WindowIconWidget {
+        pub fn new() -> Self {
+                WindowIconWidget {
+            }
+        }
+    }
+
+    impl<T: Data> Widget<T> for WindowIconWidget {
+        fn event(&mut self, ctx: &mut EventCtx, event: &Event, _data: &mut T, _env: &Env) {
+            if let Event::WindowConnected = event {
+                match ctx.window().raw_window_handle() {
+                    RawWindowHandle::Windows(handle) => {
+                        println!("it's happening!");
+                        unsafe {
+                            let exeInstance = GetModuleHandleA(PSTR::NULL);
+                            let image = LoadImageA(
+                                exeInstance,
+                                "icon.ico\0",
+                                IMAGE_ICON,
+                                256,
+                                256,
+                                LR_DEFAULTCOLOR | LR_LOADFROMFILE);
+                                
+                            SetClassLongPtrA(
+                                HWND(handle.hwnd as isize), 
+                                GCLP_HICON,
+                                image.0);
+                        }
+                    },
+                    _ => (),
+                }
+            }
+        }
+
+        fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &T, _env: &Env) {
+        }
+
+        fn update(&mut self, _ctx: &mut UpdateCtx, _old_data: &T, _data: &T, _env: &Env) {
+        }
+
+        fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, _env: &Env) -> Size {
+            bc.constrain((0.0, 0.0))
+        }
+
+        fn paint(&mut self, _ctx: &mut PaintCtx, _data: &T, _env: &Env) {
+        }
+    }
+
     pub struct TimerWidget<T, D>
     {
         timer_token : Option<TimerToken>,

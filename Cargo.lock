@@ -186,6 +186,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "const-sha1"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb58b6451e8c2a812ad979ed1d83378caa5e927eef2622017a45f251457c2c9d"
+
+[[package]]
 name = "const_fn"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -253,7 +259,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "druid"
 version = "0.7.0"
-source = "git+https://github.com/linebender/druid#bf19edff54d2e3b057387ccba0c4267e18faecb1"
+source = "git+https://github.com/playmer/druid?branch=raw-win-handle#db38ac12d4b44699a41ffc8e6872b4b9e2de1dd1"
 dependencies = [
  "console_error_panic_hook",
  "druid-derive",
@@ -274,7 +280,7 @@ dependencies = [
 [[package]]
 name = "druid-derive"
 version = "0.4.0"
-source = "git+https://github.com/linebender/druid#bf19edff54d2e3b057387ccba0c4267e18faecb1"
+source = "git+https://github.com/playmer/druid?branch=raw-win-handle#db38ac12d4b44699a41ffc8e6872b4b9e2de1dd1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -284,7 +290,7 @@ dependencies = [
 [[package]]
 name = "druid-shell"
 version = "0.7.0"
-source = "git+https://github.com/linebender/druid#bf19edff54d2e3b057387ccba0c4267e18faecb1"
+source = "git+https://github.com/playmer/druid?branch=raw-win-handle#db38ac12d4b44699a41ffc8e6872b4b9e2de1dd1"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -309,6 +315,7 @@ dependencies = [
  "lazy_static",
  "objc",
  "piet-common",
+ "raw-window-handle",
  "scopeguard",
  "time",
  "tracing",
@@ -1076,6 +1083,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "raw-window-handle"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a441a7a6c80ad6473bd4b74ec1c9a4c951794285bf941c2126f607c72e48211"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1102,7 +1118,9 @@ version = "0.1.0"
 dependencies = [
  "druid",
  "druid-shell",
+ "raw-window-handle",
  "soloud",
+ "windows",
  "winres",
 ]
 
@@ -1651,6 +1669,33 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "windows"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f1c7f11b289e450f78d55dd9dc09ae91c6ae8faed980bbf3e3a4c8f166ac259"
+dependencies = [
+ "const-sha1",
+ "windows_gen",
+ "windows_macros",
+]
+
+[[package]]
+name = "windows_gen"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57f5facfb04bc84b5fcd27018266d90ce272e11f8b91745dfdd47282e8e0607e"
+
+[[package]]
+name = "windows_macros"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c32753c378262520a4fa70c2e4389f4649e751faab2a887090567cff192d299"
+dependencies = [
+ "syn",
+ "windows_gen",
+]
 
 [[package]]
 name = "winres"

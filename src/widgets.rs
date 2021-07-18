@@ -10,12 +10,11 @@ pub mod widget {
 
     use bindings::{
         Windows::Win32::UI::WindowsAndMessaging::*,
-        Windows::Win32::Foundation::{HWND, HINSTANCE, PSTR},
+        Windows::Win32::Foundation::{HWND, PSTR},
         Windows::Win32::System::LibraryLoader::*,
         Windows::Win32::UI::Controls::*
     };
 
-    //use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
     pub struct WindowIconWidget
     {
     }
@@ -34,15 +33,15 @@ pub mod widget {
                     RawWindowHandle::Windows(handle) => {
                         println!("it's happening!");
                         unsafe {
-                            let exeInstance = GetModuleHandleA(PSTR::NULL);
+                            let exe_instance = GetModuleHandleA(PSTR::NULL);
                             let image = LoadImageA(
-                                exeInstance,
+                                exe_instance,
                                 "icon.ico\0",
                                 IMAGE_ICON,
                                 256,
                                 256,
                                 LR_DEFAULTCOLOR | LR_LOADFROMFILE);
-                                
+
                             SetClassLongPtrA(
                                 HWND(handle.hwnd as isize), 
                                 GCLP_HICON,

@@ -16,4 +16,4 @@ windows = "0.17.2"
 
 [target.'cfg(windows)'.build-dependencies]
 windows = "0.17.2"
-winres = { git = "https://github.com/playmer/winres" }
+winres = "0.1"
